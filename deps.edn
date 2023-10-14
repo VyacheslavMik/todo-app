@@ -1,11 +1,18 @@
-{:paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.11.1"}
-        http-kit/http-kit {:mvn/version "2.7.0"}
-        metosin/reitit {:mvn/version "0.5.5"}
-        hiccup/hiccup {:mvn/version "2.0.0-RC2"}
-        org.clojure/data.json {:mvn/version "2.4.0"}}
+{:paths ["src" "resources"]
+ :deps {org.clojure/clojure    {:mvn/version "1.11.1"}
+        http-kit/http-kit      {:mvn/version "2.7.0"}
+        metosin/reitit         {:mvn/version "0.5.5"}
+        hiccup/hiccup          {:mvn/version "2.0.0-RC2"}
+        org.clojure/data.json  {:mvn/version "2.4.0"}
+        com.datomic/peer       {:mvn/version "1.0.7010"}
+        buddy/buddy            {:mvn/version "2.0.0"}
+        com.fulcrologic/fulcro {:mvn/version "3.5.9"}}
  :aliases {:dev {:extra-paths ["dev" "test"]
-                 :extra-deps {org.clojure/tools.nrepl {:mvn/version "0.2.10"}}}
+                 :extra-deps {org.clojure/tools.nrepl   {:mvn/version "0.2.10"}
+                              org.clojure/clojurescript {:mvn/version "1.10.914"}
+                              thheller/shadow-cljs      {:mvn/version "2.16.9"}
+                              binaryage/devtools        {:mvn/version  "1.0.4"}
+                              cider/cider-nrepl         {:mvn/version "0.27.4"}}}
 
            :test {:extra-paths ["test"]
                   :extra-deps {io.github.cognitect-labs/test-runner {:git/tag "v0.5.1"

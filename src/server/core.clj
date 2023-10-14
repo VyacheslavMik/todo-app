@@ -42,12 +42,14 @@
 
 (defonce server (atom nil))
 
-(defn run-server
-  "Runs web-server."
-  [port]
+(defn run
+  "Runs web-server, starts database, applies schema and intitalizes data.
+    * `port` - web-server port.
+    * `db-type` - datomic database store. Available types are :postgres, :mem."
+  [{:keys [port db-type]}]
   (reset! server (hk-server/run-server app {:port port})))
 
-(defn stop-server
+(defn stop
   "Stops web-server."
   []
   (let [server-shutdown @server]
