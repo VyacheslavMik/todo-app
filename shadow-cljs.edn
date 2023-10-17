@@ -7,6 +7,6 @@
                         {:fulcro {:html-source-annotations? true}}}}
                  :modules {:main {:init-fn client.core/init
                                   :entries [client.core]}}
-                 :devtools {:after-load app.client/refresh
+                 :devtools {:after-load client.core/refresh
                             :preloads [com.fulcrologic.fulcro.inspect.preload
                                        com.fulcrologic.fulcro.inspect.dom-picker-preload]}}}}

@@ -76,4 +76,4 @@
       @(d/transact conn
                    [{:user/name user-name
                      :user/password password-hash}])
-      (read-user (d/db conn) user-name))))
+      {:user (read-user (d/db conn) user-name)})))

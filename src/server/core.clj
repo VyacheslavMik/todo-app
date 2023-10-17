@@ -1,56 +1,30 @@
 (ns server.core
-  (:require [clojure.data.json :as json]
-            [hiccup2.core :as h]
-            [org.httpkit.server :as hk-server]
-            [reitit.core :as r]))
+  (:require [server.parser :refer [api-parser]]
+            [org.httpkit.server :as http]
+            [com.fulcrologic.fulcro.server.api-middleware :as server]
+            [ring.middleware.content-type :refer [wrap-content-type]]
+            [ring.middleware.resource :refer [wrap-resource]]))
 
-(defn index
-  [_]
-  [:html
-   [:body
-    [:div "Hello"]]])
+(def ^:private not-found-handler
+  (fn [req]
+    {:status 404
+     :headers {"Content-Type" "text/plain"}
+     :body "Not Found"}))
 
-(defn rpc
-  [_]
-  {:something 1})
+(def middleware (-> not-found-handler
+                    (server/wrap-api {:uri "/api"
+                                      :parser api-parser})
+                    (server/wrap-transit-params)
+                    (server/wrap-transit-response)
+                    (wrap-resource "public")
+                    wrap-content-type))
 
-(def router
-  (r/router
-   [["/" {:handler index
-          :type :html}]
-    ["/index" {:handler index
-               :type :html}]
-    ["/rpc" {:handler rpc
-             :type :json}]]))
+(defonce stop-fn (atom nil))
 
-(defn app [{:keys [uri] :as request}]
-  (if-let [route (r/match-by-path router uri)]
-    (let [{:keys [handler type]} (:data route)]
-      (case type
-        :html
-        {:status 200
-         :headers {"Content-Type" "text/html"}
-         :body (str
-                (h/html
-                 (handler request)))}
+(defn start []
+  (reset! stop-fn (http/run-server middleware {:port 3000})))
 
-        {:status 200
-         :headers {"Content-Type" "application/json"}
-         :body (json/write-str
-                (handler request))}))
-    {:status 404}))
-
-(defonce server (atom nil))
-
-(defn run
-  "Runs web-server, starts database, applies schema and intitalizes data.
-    * `port` - web-server port.
-    * `db-type` - datomic database store. Available types are :postgres, :mem."
-  [{:keys [port db-type]}]
-  (reset! server (hk-server/run-server app {:port port})))
-
-(defn stop
-  "Stops web-server."
-  []
-  (let [server-shutdown @server]
-    (server-shutdown :timeout 100)))
+(defn stop []
+  (when @stop-fn
+    (@stop-fn)
+    (reset! stop-fn nil)))
