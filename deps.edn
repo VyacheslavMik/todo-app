@@ -7,6 +7,7 @@
         org.clojure/data.json  {:mvn/version "2.4.0"}
         com.datomic/peer       {:mvn/version "1.0.7010"}
         buddy/buddy            {:mvn/version "2.0.0"}
+        buddy/buddy-sign       {:mvn/version "3.5.351"}
         com.fulcrologic/fulcro {:mvn/version "3.5.9"}
         com.wsscode/pathom     {:mvn/version "2.4.0"}
         com.taoensso/timbre    {:mvn/version "6.3.1"}}

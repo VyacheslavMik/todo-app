@@ -1,9 +1,11 @@
 (ns server.core
-  (:require [server.parser :refer [api-parser]]
+  (:require [com.fulcrologic.fulcro.server.api-middleware :as server]
             [org.httpkit.server :as http]
-            [com.fulcrologic.fulcro.server.api-middleware :as server]
             [ring.middleware.content-type :refer [wrap-content-type]]
-            [ring.middleware.resource :refer [wrap-resource]]))
+            [ring.middleware.cookies :refer [wrap-cookies]]
+            [ring.middleware.resource :refer [wrap-resource]]
+            [server.db :as db]
+            [server.parser :refer [api-parser]]))
 
 (def ^:private not-found-handler
   (fn [req]
@@ -11,20 +13,35 @@
      :headers {"Content-Type" "text/plain"}
      :body "Not Found"}))
 
-(def middleware (-> not-found-handler
-                    (server/wrap-api {:uri "/api"
-                                      :parser api-parser})
-                    (server/wrap-transit-params)
-                    (server/wrap-transit-response)
-                    (wrap-resource "public")
-                    wrap-content-type))
+(defn wrap-api [handler connection uri]
+  (fn [request]
+    (if (= uri (:uri request))
+      (server/handle-api-request
+       (:transit-params request)
+       (fn [tx] (api-parser request connection tx)))
+      (handler request))))
 
-(defonce stop-fn (atom nil))
+(defonce state (atom {}))
 
-(defn start []
-  (reset! stop-fn (http/run-server middleware {:port 3000})))
+(defn start [_args]
+  (swap! state assoc :connection (db/connect :mem))
+
+  (let [conn (:connection @state)]
+    (when-not (db/initialized? conn)
+      (db/initialize conn)))
+
+  (let [middleware (-> not-found-handler
+                       (wrap-api (:connection @state) "/api")
+                       (server/wrap-transit-params)
+                       (server/wrap-transit-response)
+                       (wrap-resource "public")
+                       wrap-cookies
+                       wrap-content-type)]
+    (swap! state assoc :stop-fn (http/run-server middleware {:port 3000})))
+
+  (println "Server started"))
 
 (defn stop []
-  (when @stop-fn
-    (@stop-fn)
-    (reset! stop-fn nil)))
+  (when-let [stop-fn (:stop-fn @state)]
+    (stop-fn)
+    (swap! state dissoc :stop-fn)))
